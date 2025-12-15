@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trader Journal</title>
+  <style>
+    :root { font-family: -apple-system, system-ui, Arial; }
+    body { margin: 0; background: #0b0b0d; color: #f5f5f7; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 16px; }
+    .card { background: #141419; border: 1px solid #26262e; border-radius: 14px; padding: 14px; margin: 12px 0; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .row > * { flex: 1; min-width: 140px; }
+    input, select, button, textarea {
+      width: 100%; padding: 10px 12px; border-radius: 12px;
+      border: 1px solid #2b2b35; background: #0f0f14; color: #fff;
+      font-size: 16px;
+    }
+    textarea { min-height: 70px; resize: vertical; }
+    button { background: #1f6feb; border: 0; font-weight: 700; }
+    button.secondary { background: #2a2a33; }
+    .pill { display:inline-block; padding: 6px 10px; border-radius: 999px; font-weight: 700; }
+    .green { background:#173b2c; color:#8ef0b3; }
+    .yellow { background:#3b3417; color:#f1d88c; }
+    .red { background:#3b1717; color:#ff9a9a; }
+    .muted { color:#a2a2b3; }
+    h1 { font-size: 20px; margin: 6px 0 0; }
+    .big { font-size: 26px; font-weight: 900; }
+    .tiny { font-size: 12px; }
+    .listItem { border-top:1px solid #26262e; padding-top:12px; margin-top:12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="row" style="align-items:center; justify-content:space-between;">
+        <div>
+          <div class="tiny muted">Trader Journal (No CC)</div>
+          <h1>Dashboard</h1>
+        </div>
+        <div style="text-align:right;">
+          <div class="tiny muted" id="todayLbl">—</div>
+          <div class="pill" id="statusPill">Cargando…</div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <div class="tiny muted">P&L hoy</div>
+          <div class="big" id="pnl">$0</div>
+        </div>
+        <div>
+          <div class="tiny muted">Trades</div>
+          <div class="big" id="tradesUsed">0/2</div>
+        </div>
+        <div>
+          <div class="tiny muted">Target</div>
+          <div class="big" id="target">$100</div>
+        </div>
+      </div>
+
+      <div class="tiny muted" style="margin-top:10px;" id="hint">
+        ——
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <button onclick="showNew()">+ Nuevo trade</button>
+        <button class="secondary" onclick="refresh()">↻ Refrescar</button>
+      </div>
+    </div>
+
+    <div class="card" id="newCard" style="display:none;">
+      <h1>Nuevo trade</h1>
+      <div class="row">
+        <select id="cuenta">
+          <option value="Robinhood">Robinhood</option>
+          <option value="Tradier">Tradier</option>
+          <option value="Cash">Cash</option>
+          <option value="Margin">Margin</option>
+        </select>
+        <input id="activo" placeholder="Activo (SPY/QQQ/IWM)" />
+      </div>
+      <div class="row">
+        <select id="tipo">
+          <option value="0DTE">0DTE</option>
+          <option value="1DTE">1DTE</option>
+          <option value="Spread">Spread</option>
+          <option value="Iron Condor">Iron Condor</option>
+          <option value="Iron Butterfly">Iron Butterfly</option>
+          <option value="Direccional">Direccional</option>
+        </select>
+        <select id="direccion">
+          <option value="Neutral">Neutral</option>
+          <option value="Bull">Bull</option>
+          <option value="Bear">Bear</option>
+        </select>
+      </div>
+      <div class="row">
+        <input id="estrategia" placeholder="Estrategia (PCS/CCS/IC/IB…)" />
+        <input id="targetPct" placeholder="Target % (30/40/50)" inputmode="decimal"/>
+      </div>
+      <div class="row">
+        <input id="prima" placeholder="Prima $" inputmode="decimal"/>
+        <input id="riesgoMax" placeholder="Riesgo máx $" inputmode="decimal"/>
+      </div>
+      <div class="row">
+        <button onclick="submitNew()">Guardar</button>
+        <button class="secondary" onclick="hideNew()">Cancelar</button>
+      </div>
+      <div class="tiny muted" id="newMsg" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card">
+      <h1>Trades abiertos hoy</h1>
+      <div class="tiny muted">Toca uno para cerrarlo.</div>
+      <div id="openList" class="muted" style="margin-top:10px;">—</div>
+    </div>
+
+    <div class="card" id="closeCard" style="display:none;">
+      <h1>Cerrar trade</h1>
+      <div class="tiny muted" id="closeTitle">—</div>
+      <div class="row" style="margin-top:10px;">
+        <input id="resultado" placeholder="Resultado $ (ej: 45 o -30)" inputmode="decimal"/>
+        <input id="pctLogrado" placeholder="% logrado (opcional)" inputmode="decimal"/>
+      </div>
+      <div class="row">
+        <select id="plan">
+          <option value="SI">Plan respetado: SI</option>
+          <option value="NO">Plan respetado: NO</option>
+        </select>
+        <input id="error" placeholder="Error (si NO)" />
+      </div>
+      <textarea id="notas" placeholder="Notas (opcional)"></textarea>
+      <div class="row" style="margin-top:10px;">
+        <button onclick="submitClose()">Cerrar</button>
+        <button class="secondary" onclick="hideClose()">Cancelar</button>
+      </div>
+      <div class="tiny muted" id="closeMsg" style="margin-top:10px;"></div>
+    </div>
+
+  </div>
+
+<script>
+  // === PEGA AQUÍ TU URL DEL WEB APP (Apps Script) ===
+  const SCRIPT_URL = "PASTE_YOUR_SCRIPT_URL";
+
+  let state = {
+    date: "",
+    config: { targetDaily: 100, maxTradesDaily: 2 },
+    openTrades: [],
+    selectedRow: null
+  };
+
+  function todayNY() {
+    // YYYY-MM-DD en hora NY (aprox usando locale)
+    const d = new Date();
+    const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(d);
+    const y = parts.find(p=>p.type==='year').value;
+    const m = parts.find(p=>p.type==='month').value;
+    const da = parts.find(p=>p.type==='day').value;
+    return `${y}-${m}-${da}`;
+  }
+
+  function nowHM() {
+    const d = new Date();
+    return new Intl.DateTimeFormat('en-US', { timeZone:'America/New_York', hour:'2-digit', minute:'2-digit', hour12:true }).format(d);
+  }
+
+  function setPill(kind, text) {
+    const pill = document.getElementById("statusPill");
+    pill.className = "pill " + kind;
+    pill.textContent = text;
+  }
+
+  async function apiGetStatus(dateStr) {
+    const url = `${SCRIPT_URL}?action=status&date=${encodeURIComponent(dateStr)}`;
+    const r = await fetch(url);
+    return await r.json();
+  }
+
+  async function apiPost(action, payload) {
+    const r = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify({ action, payload })
+    });
+    return await r.json();
+  }
+
+  function money(n) {
+    const x = Number(n || 0);
+    const sign = x < 0 ? "-" : "";
+    return sign + "$" + Math.abs(x).toFixed(2);
+  }
+
+  function showNew(){ document.getElementById("newCard").style.display="block"; }
+  function hideNew(){ document.getElementById("newCard").style.display="none"; document.getElementById("newMsg").textContent=""; }
+
+  function showClose(){ document.getElementById("closeCard").style.display="block"; }
+  function hideClose(){ document.getElementById("closeCard").style.display="none"; document.getElementById("closeMsg").textContent=""; state.selectedRow=null; }
+
+  function setOpenList(items) {
+    const box = document.getElementById("openList");
+    if (!items || items.length === 0) { box.textContent = "No hay trades abiertos hoy ✅"; return; }
+
+    box.innerHTML = "";
+    items.forEach((t) => {
+      const div = document.createElement("div");
+      div.className = "listItem";
+      div.innerHTML = `
+        <div><b>${t.activo}</b> — ${t.tipo} — ${t.estrategia}</div>
+        <div class="tiny muted">${t.cuenta} • ${t.direccion} • Entrada: ${t.horaEntrada || "—"} • Prima: ${t.prima || "—"} • Riesgo: ${t.riesgo || "—"}</div>
+        <div class="tiny muted">Row: ${t.rowNumber} (tap para cerrar)</div>
+      `;
+      div.onclick = () => {
+        state.selectedRow = t.rowNumber;
+        document.getElementById("closeTitle").textContent = `${t.activo} • ${t.tipo} • ${t.estrategia} • (Row ${t.rowNumber})`;
+        document.getElementById("resultado").value = "";
+        document.getElementById("pctLogrado").value = "";
+        document.getElementById("plan").value = "SI";
+        document.getElementById("error").value = "";
+        document.getElementById("notas").value = "";
+        showClose();
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      };
+      box.appendChild(div);
+    });
+  }
+
+  function updateUI(status) {
+    state.config = status.config || state.config;
+    state.openTrades = status.openTrades || [];
+    state.date = status.date || state.date;
+
+    document.getElementById("todayLbl").textContent = state.date;
+    document.getElementById("pnl").textContent = money(status.pnl || 0);
+    document.getElementById("tradesUsed").textContent = `${status.tradesToday || 0}/${state.config.maxTradesDaily || 2}`;
+    document.getElementById("target").textContent = money(state.config.targetDaily || 100);
+
+    const pnl = Number(status.pnl || 0);
+    const used = Number(status.tradesToday || 0);
+    const maxT = Number(state.config.maxTradesDaily || 2);
+    const tgt = Number(state.config.targetDaily || 100);
+
+    // Alert logic (visual)
+    let kind = "green", text="Disciplina ON";
+    let hint = `Meta: ${money(tgt)} • Máx trades: ${maxT} • Hora NY: ${nowHM()}`;
+
+    if (used >= maxT) {
+      kind = "yellow"; text = "Límite de trades alcanzado ⚠️";
+      hint = `Ya usaste ${used}/${maxT}. Si entras otro, que sea A+ o nada.`;
+    }
+    if (pnl >= tgt) {
+      kind = "red"; text = "Target alcanzado 🎯 STOP";
+      hint = `Hoy ya está hecho. No regales lo ganado.`;
+    }
+    if (pnl < 0 && used >= maxT) {
+      kind = "red"; text = "Riesgo de venganza 🔥";
+      hint = `Perdiste hoy y ya llegaste al límite. Mejor cerrar el día.`;
+    }
+
+    setPill(kind, text);
+    document.getElementById("hint").textContent = hint;
+
+    setOpenList(state.openTrades);
+  }
+
+  async function refresh() {
+    try {
+      setPill("yellow", "Actualizando…");
+      const dateStr = todayNY();
+      const status = await apiGetStatus(dateStr);
+      if (!status.ok) throw new Error(status.error || "Status failed");
+      updateUI(status);
+    } catch (e) {
+      setPill("red", "Error");
+      document.getElementById("hint").textContent = String(e);
+    }
+  }
+
+  async function submitNew() {
+    const msg = document.getElementById("newMsg");
+    msg.textContent = "Guardando…";
+
+    const payload = {
+      fecha: todayNY(),
+      dia: new Intl.DateTimeFormat('es-US', { timeZone:'America/New_York', weekday:'long' }).format(new Date()),
+      cuenta: document.getElementById("cuenta").value.trim(),
+      activo: document.getElementById("activo").value.trim().toUpperCase(),
+      tipo: document.getElementById("tipo").value.trim(),
+      estrategia: document.getElementById("estrategia").value.trim(),
+      direccion: document.getElementById("direccion").value.trim(),
+      horaEntrada: nowHM(),
+      prima: document.getElementById("prima").value.trim(),
+      riesgoMax: document.getElementById("riesgoMax").value.trim(),
+      targetPct: document.getElementById("targetPct").value.trim()
+    };
+
+    if (!payload.activo) { msg.textContent = "Pon el activo (SPY/QQQ/etc)."; return; }
+    if (!payload.estrategia) { msg.textContent = "Pon la estrategia (PCS/IC/etc)."; return; }
+
+    try {
+      const r = await apiPost("newTrade", payload);
+      if (!r.ok) throw new Error(r.error || "No se pudo guardar");
+      msg.textContent = `✅ Guardado (Row ${r.rowNumber}).`;
+      hideNew();
+      await refresh();
+    } catch (e) {
+      msg.textContent = "❌ " + String(e);
+    }
+  }
+
+  async function submitClose() {
+    const msg = document.getElementById("closeMsg");
+    msg.textContent = "Cerrando…";
+    if (!state.selectedRow) { msg.textContent = "No hay trade seleccionado."; return; }
+
+    const payload = {
+      rowNumber: state.selectedRow,
+      horaSalida: nowHM(),
+      resultado: document.getElementById("resultado").value.trim(),
+      pctLogrado: document.getElementById("pctLogrado").value.trim(),
+      plan: document.getElementById("plan").value.trim(),
+      error: document.getElementById("error").value.trim(),
+      notas: document.getElementById("notas").value.trim()
+    };
+
+    if (!payload.resultado) { msg.textContent = "Pon el Resultado $ (ej: 45 o -30)."; return; }
+    if (payload.plan === "NO" && !payload.error) { msg.textContent = "Si fue NO, pon el error (rápido)."; return; }
+
+    try {
+      const r = await apiPost("closeTrade", payload);
+      if (!r.ok) throw new Error(r.error || "No se pudo cerrar");
+      msg.textContent = "✅ Trade cerrado.";
+      hideClose();
+      await refresh();
+    } catch (e) {
+      msg.textContent = "❌ " + String(e);
+    }
+  }
+
+  // init
+  document.getElementById("todayLbl").textContent = todayNY();
+  refresh();
+</script>
+</body>
+</html>
