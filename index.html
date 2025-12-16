@@ -180,7 +180,7 @@
 
  async function apiPost(action, payload) {
   const qs = new URLSearchParams({
-    action,
+    action: String(action).toLowerCase(),
     payload: JSON.stringify(payload)
   }).toString();
 
