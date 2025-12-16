@@ -112,6 +112,7 @@
 
     <div class="card">
       <h1>Trades abiertos hoy</h1>
+      <div id="openTradesList"></div>
       <div class="tiny muted">Toca uno para cerrarlo.</div>
       <div id="openList" class="muted" style="margin-top:10px;">—</div>
     </div>
@@ -373,6 +374,23 @@
   } catch (err) {
     alert("❌ " + err.message);
   }
+}
+function renderOpenTrades(trades) {
+  const container = document.getElementById("openTradesList");
+
+  if (!trades || trades.length === 0) {
+    container.innerHTML = `<p>No hay trades abiertos hoy ✅</p>`;
+    return;
+  }
+
+  container.innerHTML = trades.map(t => `
+    <div class="trade-row" onclick="cerrarTrade(${t.rowNumber})">
+      <strong>${t.activo}</strong>
+      <span>${t.estrategia}</span>
+      <span>${t.direccion}</span>
+      <span>$${t.prima}</span>
+    </div>
+  `).join("");
 }
 
 </script>
