@@ -273,6 +273,8 @@
       setPill("yellow", "Actualizando…");
       const dateStr = todayNY();
       const status = await apiGetStatus(dateStr);
+      console.log("STATUS FROM BACKEND:", status);
+      updateUI(status);
       if (!status.ok) throw new Error(status.error || "Status failed");
       updateUI(status);
     } catch (e) {
