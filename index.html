@@ -178,14 +178,16 @@
     return await r.json();
   }
 
-  async function apiPost(action, payload) {
-    const r = await fetch(SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type":"application/json" },
-      body: JSON.stringify({ action, payload })
-    });
-    return await r.json();
-  }
+ async function apiPost(action, payload) {
+  const qs = new URLSearchParams({
+    action,
+    payload: JSON.stringify(payload)
+  }).toString();
+
+  const url = `${SCRIPT_URL}?${qs}`;
+  const r = await fetch(url);
+  return await r.json();
+}
 
   function money(n) {
     const x = Number(n || 0);
