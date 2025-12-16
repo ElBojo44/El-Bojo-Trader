@@ -142,7 +142,7 @@
 
 <script>
   // === PEGA AQUÍ TU URL DEL WEB APP (Apps Script) ===
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3Fs1AcTuMuicZTvBx60SAeWkFLLSqOO58voJUMbpStGz4dlc58jFKL0svB3s_PNuMPw/exec?v=20251215";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3Fs1AcTuMuicZTvBx60SAeWkFLLSqOO58voJUMbpStGz4dlc58jFKL0svB3s_PNuMPw/exec";
 
   let state = {
     date: "",
@@ -344,6 +344,37 @@
   // init
   document.getElementById("todayLbl").textContent = todayNY();
   refresh();
+  async function guardarTrade() {
+  try {
+    const payload = {
+      fecha: todayNY(),
+      cuenta: "Robinhood",
+      activo: "SPY",
+      tipo: "0DTE",
+      estrategia: "PCS",
+      direccion: "Bull",
+      prima: 2.73
+    };
+
+    const url =
+      SCRIPT_URL +
+      "?action=newtrade&payload=" +
+      encodeURIComponent(JSON.stringify(payload));
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.ok) {
+      throw new Error(data.error || "Error backend");
+    }
+
+    alert("✅ Trade enviado correctamente");
+
+  } catch (err) {
+    alert("❌ " + err.message);
+  }
+}
+
 </script>
 </body>
 </html>
